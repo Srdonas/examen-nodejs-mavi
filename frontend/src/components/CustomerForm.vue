@@ -1,6 +1,6 @@
 <template>
     <div>
-      <h2>Add/Update Customer</h2>
+      <h2>Add Customer</h2>
       <form @submit.prevent="handleSubmit">
         <input v-model="form.nombres" placeholder="Nombres" required />
         <input v-model="form.apellido_paterno" placeholder="Apellido Paterno" required />
@@ -52,4 +52,5 @@
       };
     },
   };
-  </script>  
+  </script>
+  
