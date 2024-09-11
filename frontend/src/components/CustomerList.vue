@@ -6,56 +6,87 @@
   >
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Customer Management</v-toolbar-title>
+        <v-toolbar-title>Clientes Manager</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
+
+        <!-- Message when customers are available -->
+        <v-alert v-if="customers.length === 0" type="info" dismissible>
+          Hay {{ customers.length }} cliente(s) en la lista.
+        </v-alert>
+
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ props }">
             <v-btn class="mb-2" color="primary" dark v-bind="props">
-              New Customer
+              Nuevo Cliente
             </v-btn>
           </template>
           <v-card>
             <v-card-title>
               <span class="text-h5">{{ formTitle }}</span>
             </v-card-title>
-
             <v-card-text>
               <v-container>
-                <v-row>
-                  <v-col cols="12" sm="6">
-                    <v-text-field v-model="editedItem.nombres" label="Nombres"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6">
-                    <v-text-field v-model="editedItem.apellido_paterno" label="Apellido Paterno"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6">
-                    <v-text-field v-model="editedItem.apellido_materno" label="Apellido Materno"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6">
-                    <v-text-field v-model="editedItem.domicilio" label="Domicilio"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6">
-                    <v-text-field v-model="editedItem.correo_electronico" label="Correo Electrónico"></v-text-field>
-                  </v-col>
-                </v-row>
+                <v-form ref="form" v-model="isValid" lazy-validation>
+                  <v-row>
+                    <v-col cols="12" sm="6">
+                      <v-text-field
+                        v-model="editedItem.nombres"
+                        :rules="[requiredRule, lettersOnlyRule]"
+                        label="Nombres"
+                        required
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                      <v-text-field
+                        v-model="editedItem.apellido_paterno"
+                        :rules="[requiredRule, lettersOnlyRule]"
+                        label="Apellido Paterno"
+                        required
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                      <v-text-field
+                        v-model="editedItem.apellido_materno"
+                        :rules="[requiredRule, lettersOnlyRule]"
+                        label="Apellido Materno"
+                        required
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                      <v-text-field
+                        v-model="editedItem.domicilio"
+                        :rules="[requiredRule]"
+                        label="Domicilio"
+                        required
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                      <v-text-field
+                        v-model="editedItem.correo_electronico"
+                        :rules="[requiredRule, emailRules]"
+                        required
+                        label="Correo Electrónico"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-form>
               </v-container>
             </v-card-text>
-
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue-darken-1" variant="text" @click="close">Cancel</v-btn>
-              <v-btn color="blue-darken-1" variant="text" @click="save">Save</v-btn>
+              <v-btn color="blue-darken-1" variant="text" @click="close">Cancelar</v-btn>
+              <v-btn color="blue-darken-1" variant="text" :disabled="!isValid" @click="save">Guardar</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
 
-        <v-dialog v-model="dialogDelete" max-width="500px">
+        <v-dialog v-model="dialogDelete" max-width="600px">
           <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this customer?</v-card-title>
+            <v-card-title class="text-h5">¿Estas seguro de que quieres eliminar este usuario?</v-card-title>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue-darken-1" variant="text" @click="closeDelete">Cancel</v-btn>
+              <v-btn color="blue-darken-1" variant="text" @click="closeDelete">Cancelar</v-btn>
               <v-btn color="blue-darken-1" variant="text" @click="deleteCustomerConfirm">OK</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
@@ -87,6 +118,7 @@ export default {
   data: () => ({
     dialog: false,
     dialogDelete: false,
+    isValid: false, // Tracks form validity
     headers: [
       { title: 'ID', key: 'id' },
       { title: 'Nombres', key: 'nombres' },
@@ -94,7 +126,7 @@ export default {
       { title: 'Apellido Materno', key: 'apellido_materno' },
       { title: 'Domicilio', key: 'domicilio' },
       { title: 'Correo Electrónico', key: 'correo_electronico' },
-      { title: 'Actions', key: 'actions', sortable: false },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
     customers: [],
     editedIndex: -1,
@@ -114,11 +146,15 @@ export default {
       domicilio: '',
       correo_electronico: '',
     },
+    // Validation rules
+    requiredRule: v => !!v || 'Este campo es obligatorio',
+    lettersOnlyRule: v => /^[a-zA-ZÀ-ÿ\u00f1\u00d1 ]+$/i.test(v) || 'Este campo solo debe contener letras',
+    emailRules: v => !!v && /.+@.+\..+/.test(v) || 'Correo electrónico no válido',
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? 'New Customer' : 'Edit Customer';
+      return this.editedIndex === -1 ? 'Nuevo Cliente' : 'Editar Cliente';
     },
   },
 
