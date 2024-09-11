@@ -193,8 +193,9 @@ export default {
       this.dialogDelete = true;
     },
 
-    deleteCustomerConfirm() {
+    async deleteCustomerConfirm() {
       this.customers.splice(this.editedIndex, 1);
+      await customerService.deleteCustomer(this.editedItem.id);
       this.closeDelete();
     },
 

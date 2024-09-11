@@ -16,7 +16,7 @@
 
     ```bash
     git clone https://github.com/Srdonas/examen-nodejs-mavi.git
-    cd clientes-manager
+    cd examen-nodejs-mavi
     ```
 
 ## Configuración de la API
